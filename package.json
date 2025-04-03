@@ -7,9 +7,13 @@
     "dependencies": {
         "@types/node": "^22.13.17",
         "dotenv": "^16.4.7",
+        "fs-extra": "^11.3.0",
         "openai": "^4.91.1"
     },
     "scripts": {
-        "start": "node runner.ts"
+        "start": "node ./src/runner.ts"
+    },
+    "devDependencies": {
+        "@types/fs-extra": "^11.0.4"
     }
 }
