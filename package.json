@@ -1,0 +1,15 @@
+{
+    "name": "numeric-cnpj-rag-adapter-poc",
+    "version": "0.0.1",
+    "license": "MIT",
+    "type": "module",
+    "author": "Scarlet Victoria Rose <scarletrosetech@gmail.com>",
+    "dependencies": {
+        "@types/node": "^22.13.17",
+        "dotenv": "^16.4.7",
+        "openai": "^4.91.1"
+    },
+    "scripts": {
+        "start": "node runner.ts"
+    }
+}
