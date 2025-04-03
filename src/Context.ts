@@ -28,6 +28,8 @@ class Context {
             '.sql',
             '.go',
             '.mod',
+            '.md',
+            '.resx',
         ];
 
         const loadFiles = (dir: string) => {
