@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>tbertuzzi</Authors>
+    <Company>KBits</Company>
+    <Description>Serviço de consulta de dados através do CNPJ alfanumérico</Description>
+    <Copyright>Copyright ©2018 KBits</Copyright>
+    <PackageLicenseUrl>http://opensource.org/licenses/MS-PL</PackageLicenseUrl>
+    <PackageTags>xamarin xamarin.forms cnpj consulta webforms windosforms aspnet</PackageTags>
+    <PackageReleaseNotes>Initial Version</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/TBertuzzi/Consulta.CNPJ</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/TBertuzzi/Consulta.CNPJ</RepositoryUrl>
+    <PackageIconUrl>https://github.com/TBertuzzi/Consulta.CNPJ/blob/master/Resources/CNPJIcon.png?raw=true</PackageIconUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+  </ItemGroup>
+
+</Project>
