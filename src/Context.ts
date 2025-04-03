@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { processThroughLLM } from './processThroughLLM.ts';
+import { OpenRouterLLMHandler } from './handlers/LLMHandler.ts';
+import { LocalKnowledgeHandler } from './handlers/KnowledgeHandler.ts';
 
 type File = {
     path: string;
@@ -54,31 +55,74 @@ class Context {
         loadFiles(directory);
     }
 
-    async processFiles(): Promise<void> {
-        for (const file of this.files) {
-            const processedContent = await processThroughLLM(file.content);
-            this.newFiles.push({
-                path: file.path,
-                content: processedContent,
-            });
-        }
-    }
+    async processFiles(outputDirectory: string): Promise<string[]> {
+        const llmHandler = new OpenRouterLLMHandler(
+            process.env.LLM_API_KEY!,
+            'deepseek/deepseek-chat:free'
+        );
 
-    saveFiles(outputDirectory: string): void {
-        console.log(this.newFiles);
-        for (const file of this.newFiles) {
+        const knowledgeHandler = new LocalKnowledgeHandler();
+
+        const amountRelatedToCNPJ = this.files.filter((file) =>
+            this.isRelatedToCNPJ(file.content)
+        );
+        console.log('');
+        console.log(
+            `(${
+                amountRelatedToCNPJ.length
+            }) arquivos relacionados a CNPJ encontrados: \n${amountRelatedToCNPJ
+                .map((file) => '-> ' + file.path)
+                .join('\n')}`
+        );
+        console.log('');
+
+        const processedFiles: string[] = [];
+
+        for (const file of this.files) {
+            if (!this.isRelatedToCNPJ(file.content)) {
+                continue;
+            }
+
+            console.log(`Processando arquivo: ${file.path}`);
+            const processedContent = await llmHandler.sendMessage(
+                file.content,
+                await knowledgeHandler.getSystemPrompts(),
+                await knowledgeHandler.getExamples()
+            );
+
             const outputPath = path.join(
                 outputDirectory,
                 path.relative(this.directory, file.path)
             );
+
             const outputDir = path.dirname(outputPath);
 
             if (!fs.existsSync(outputDir)) {
                 fs.mkdirSync(outputDir, { recursive: true });
             }
 
-            fs.writeFileSync(outputPath, file.content, 'utf-8');
+            fs.writeFileSync(outputPath, processedContent, 'utf-8');
+            processedFiles.push(outputPath);
         }
+
+        return processedFiles;
+    }
+
+    private isRelatedToCNPJ(fileContent: string): boolean {
+        const cnpjKeywords = [
+            'cnpj',
+            'cnpjvalidation',
+            'cnpjvalidator',
+            'validarcnpj',
+            'taxid',
+            'cpfcnpj',
+            'validacnpj',
+            'cnpjvalidacao',
+        ];
+
+        return cnpjKeywords.some((keyword) =>
+            fileContent.toLowerCase().includes(keyword)
+        );
     }
 }
 
