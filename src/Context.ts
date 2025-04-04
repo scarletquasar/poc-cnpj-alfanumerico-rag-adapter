@@ -65,6 +65,23 @@ class Context {
 
         const knowledgeHandler = new LocalKnowledgeHandler();
 
+        const clearDirectory = (dir: string) => {
+            if (fs.existsSync(dir)) {
+                const entries = fs.readdirSync(dir, { withFileTypes: true });
+                for (const entry of entries) {
+                    const fullPath = path.join(dir, entry.name);
+                    if (entry.isDirectory()) {
+                        clearDirectory(fullPath);
+                        fs.rmdirSync(fullPath);
+                    } else {
+                        fs.unlinkSync(fullPath);
+                    }
+                }
+            }
+        };
+
+        clearDirectory(outputDirectory);
+
         const amountRelatedToCNPJ = this.files.filter((file) =>
             this.isRelatedToCNPJ(file.content)
         );

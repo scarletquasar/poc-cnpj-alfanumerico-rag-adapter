@@ -6,8 +6,10 @@
     "author": "Scarlet Victoria Rose <scarletrosetech@gmail.com>",
     "dependencies": {
         "@types/node": "^22.13.17",
+        "axios": "^1.8.4",
         "dotenv": "^16.4.7",
         "fs-extra": "^11.3.0",
+        "node-fetch": "^3.3.2",
         "openai": "^4.91.1"
     },
     "scripts": {

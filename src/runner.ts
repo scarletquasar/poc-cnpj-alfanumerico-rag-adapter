@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { ContextFactory } from './Context.ts';
 import { execSync } from 'child_process';
-import { existsSync, readdirSync, mkdirSync, statSync, copyFileSync } from 'fs';
+import { existsSync, readdirSync, mkdirSync, copyFileSync } from 'fs';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
 
@@ -32,49 +32,51 @@ async function main() {
     let dataProcessed = false;
 
     if (repoUrl) {
-        const gitkeepPath = join(inputDir, '.gitkeep');
-
-        if (existsSync(gitkeepPath)) {
-            console.log('Removing .gitkeep file.');
-            try {
-                execSync(`rm ${gitkeepPath}`, { stdio: 'ignore' });
-            } catch {
-                execSync(`del ${gitkeepPath}`, { stdio: 'ignore' });
-            }
-        }
-
         const gitFolderPath = join(inputDir, '.git');
         if (existsSync(gitFolderPath)) {
             console.log('Removing .git folder.');
             try {
-                execSync(`rm -rf ${gitFolderPath}`, { stdio: 'ignore' });
-            } catch {
-                execSync(`rmdir /s /q ${gitFolderPath}`, { stdio: 'ignore' });
-            }
-        }
-
-        if (
-            !existsSync(inputDir) ||
-            readdirSync(inputDir).filter((file) => file !== '.gitkeep')
-                .length === 0
-        ) {
-            try {
-                console.log(`Cloning repository: ${repoUrl}`);
-                execSync(`git clone ${repoUrl} ${inputDir}`, {
-                    stdio: 'inherit',
+                execSync(`rm -rf ${gitFolderPath}`, {
+                    stdio: 'ignore',
                 });
-            } catch (error) {
-                console.error('Error cloning repository:', error);
-                return;
+            } catch {
+                if (existsSync(gitFolderPath)) {
+                    execSync(`Remove-Item -Recurse -Force "${gitFolderPath}"`, {
+                        shell: 'powershell.exe',
+                        stdio: 'ignore',
+                    });
+                }
             }
-        } else {
-            console.log(
-                'Diretório input não está vazio, não será realizado clone.'
-            );
         }
 
-        console.log('Creating .gitkeep file.');
-        execSync(`echo. > ${gitkeepPath}`);
+        if (existsSync(inputDir)) {
+            console.log('Diretório input não está vazio, apagando conteúdo.');
+            try {
+                if (process.platform === 'win32') {
+                    execSync(`Remove-Item -Recurse -Force ${inputDir}`, {
+                        shell: 'powershell.exe',
+                        stdio: 'ignore',
+                    });
+                } else {
+                    execSync(`rm -rf ${inputDir}`, { stdio: 'ignore' });
+                }
+            } catch (error) {
+                console.error('Erro ao apagar o diretório input:', error);
+            }
+        }
+
+        mkdirSync(inputDir, { recursive: true });
+
+        try {
+            console.log(`Cloning repository: ${repoUrl}`);
+            execSync(`git clone ${repoUrl} .`, {
+                cwd: inputDir,
+                stdio: 'inherit',
+            });
+        } catch (error) {
+            console.error('Error cloning repository:', error);
+            return;
+        }
 
         try {
             console.log('Verificando default branch (master ou main).');
@@ -136,7 +138,7 @@ async function main() {
                 'chore: atualização para CNPJ alfanumérico';
             const commitMessageDescription = processedResult.join('\n');
 
-            execSync(`git add .`, { cwd: inputDir, stdio: 'inherit' });
+            execSync(`git add . -f`, { cwd: inputDir, stdio: 'inherit' });
             execSync(
                 `git commit -m "${commitMessageTitle}" -m "${commitMessageDescription}"`,
                 { cwd: inputDir, stdio: 'inherit' }

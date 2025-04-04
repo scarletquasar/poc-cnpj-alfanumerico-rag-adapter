@@ -1,3 +1,5 @@
+import axios, { type AxiosRequestConfig } from 'axios';
+
 interface LLMHandler {
     sendMessage(
         message: string,
@@ -36,31 +38,46 @@ class OpenRouterLLMHandler implements LLMHandler {
             }
         );
 
-        const response = await fetch(
-            'https://openrouter.ai/api/v1/chat/completions',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${this.apiKey}`,
-                },
-                body: JSON.stringify({
-                    model: this.model,
-                    messages: [
-                        ...defaultPrompts,
-                        ...examplePrompts,
-                        { role: 'user', content: message },
-                    ],
-                }),
+        const maxRetries = 5;
+        const timeout = 1000;
+        const attemptRequest = async (attempt: number): Promise<string> => {
+            try {
+                console.log(`Tentativa ${attempt + 1} de ${maxRetries}...`);
+                const config: AxiosRequestConfig = {
+                    method: 'POST',
+                    url: 'https://openrouter.ai/api/v1/chat/completions',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${this.apiKey}`,
+                    },
+                    data: {
+                        model: this.model,
+                        messages: [
+                            ...defaultPrompts,
+                            ...examplePrompts,
+                            { role: 'user', content: message },
+                        ],
+                    },
+                    timeout,
+                };
+
+                const response = await axios(config);
+
+                return response.data.choices[0].message.content ?? message;
+            } catch (error: any) {
+                console.error(
+                    `Tentativa ${attempt + 1} falhou: ${error.message}`
+                );
+                if (attempt >= maxRetries - 1) {
+                    throw new Error(
+                        `Falhou após ${maxRetries} tentativas: ${error}`
+                    );
+                }
+                return attemptRequest(attempt + 1);
             }
-        );
+        };
 
-        if (!response.ok) {
-            throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        return data.choices[0].message.content ?? message;
+        return attemptRequest(0);
     }
 }
 
